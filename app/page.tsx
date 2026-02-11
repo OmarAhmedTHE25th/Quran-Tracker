@@ -1,7 +1,9 @@
 "use client";
 // @ts-ignore
 import {useEffect, useState} from "react";
-
+// @ts-ignore
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient()
 interface Surah{
     number: number
     name: string

@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+
+}
+
+model SurahProgress {
+  number         Int     @id
+  englishName    String
+  completed      Boolean @default(false)
+  completedAyahs Int     @default(0)
+}
