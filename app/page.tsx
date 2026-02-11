@@ -30,10 +30,19 @@ export default function Home() {
             setSurahs(json.data);
         };
 
-        // 5. Run the worker!
-       console.log( fetchMyData())
+
+       fetchMyData()
 
     }, []); // 6. The "Only Once" rule.
 
-
+return(
+    <div >
+        {
+            surahs.map( s => (
+                <div className = "border p-4 rounded-lg shadow-md"  key={s.number}>
+                    <span>{s.number}</span>.  <span>{s.englishName}</span>
+                </div>))
+        }
+    </div>
+)
 }
