@@ -9,24 +9,23 @@ interface Surah{
     englishNameTranslation:string
     numberOfAyahs: number
     revelationType: string
-    completed_ayat?: number;
+    completedAyahs?: number;
+    completed: boolean
 }
 
 export default function Home() {
-    // 1. Memory: Create a "State" variable to hold the list.
-    // It starts as an empty array [].
-    const [surahs, setSurahs] = useState<Surah[]>([]);
 
-    // 2. The Trigger: "When this component starts..."
+    const [surahs, setSurahs] = useState<Surah[]>([]);
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 30;
+    console.log(surahs.filter(surah => surah.completed))
     useEffect(() => {
 
-        // 3. The Worker: We define a function to go get the data.
         const fetchMyData = async () => {
             const res = await fetch("https://api.alquran.cloud/v1/surah");
             const json = await res.json();
 
-            // 4. The Update: We take the array from 'json.data'
-            // and put it into our 'surahs' memory.
+
             setSurahs(json.data);
         };
 
@@ -34,15 +33,60 @@ export default function Home() {
        fetchMyData()
 
     }, []); // 6. The "Only Once" rule.
-
-return(
-    <div >
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const displayedSurahs = surahs.slice(startIndex, endIndex);
+    return(
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6 bg-white min-h-screen">
         {
-            surahs.map( s => (
-                <div className = "border p-4 rounded-lg shadow-md"  key={s.number}>
+
+            displayedSurahs.map( s => (
+                <div className = "border p-4 rounded-lg shadow-md flex flex-col gap-0.5"   key={s.number}>
                     <span>{s.number}</span>.  <span>{s.englishName}</span>
-                </div>))
+                    <button className={"mt-2 bg-gray-500  text-center text-green-400 py-2 rounded px-6"}
+                            onClick={()=> {
+                                setSurahs(
+                                    surahs.map(surah => {
+                                        if (surah.number === s.number) {
+                                            let completedSurah =  {...surah};
+                                            completedSurah.completed = true;
+                                            completedSurah.completedAyahs = surah.numberOfAyahs;
+                                            return completedSurah;
+                                        } else {
+                                            return surah;
+                                        }
+                                    }
+                                    )
+                                )
+                            }}>
+                        Mark as Done</button>
+
+                </div>
+
+                ))
+
         }
+        <div className="flex justify-center gap-4 mt-10 mb-10">
+            <button
+                className="px-1 py-2 bg-gray-700 rounded disabled:opacity-30"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+            >
+                Previous
+            </button>
+
+            <span className="flex items-center text-xl font-bold">Page {page} of 4</span>
+
+            <button
+                className="px-4 py-2 bg-gray-700 rounded disabled:opacity-30"
+                onClick={() => setPage(p => Math.min(4, p + 1))}
+                disabled={page === 4}
+            >
+                Next
+            </button>
+        </div>
     </div>
+
+
 )
 }
