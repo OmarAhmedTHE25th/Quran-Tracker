@@ -11,5 +11,6 @@ model SurahProgress {
   number         Int     @id
   englishName    String
   completed      Boolean @default(false)
+  numberOfAyahs Int
   completedAyahs Int     @default(0)
 }
