@@ -1,9 +1,5 @@
-// @ts-ignore
-
-// @ts-ignore
-import {useEffect, useState} from "react";
 import {initializePrisma} from "@/prisma/prisma";
-const prisma = initializePrisma();
+import SurahClient from "./client"
 
 interface Surah{
     number: number
@@ -23,88 +19,12 @@ export async function getSurahData() {
     return json.data;
 }
 
-    export default function Home() {
-        const [surahs, setSurahs] = useState<Surah[]>([]);
-        const [page, setPage] = useState(1);
-        const itemsPerPage = 30;
-        const  data = prisma.surahProgress.findMany()
-        useEffect(() => {
+    export default async function Home() {
+        const prisma = initializePrisma();
+        const surahs = await prisma.surahProgress.findMany({
+            orderBy: { number: "asc" },
+        });
 
-            const fetchMyData = async () => {
-                const data = await getSurahData();
-                setSurahs(data);
-            };
+        return <SurahClient surahs={surahs} />;
 
-        fetchMyData()
-        }, []);
-        console.log(surahs.filter(surah => surah.completed))
-
-        const startIndex = (page - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const displayedSurahs = surahs.slice(startIndex, endIndex);
-        return (
-            <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6 bg-white min-h-screen">
-                {
-
-                    displayedSurahs.map(s => (
-                        <div className="border p-4 rounded-lg shadow-md flex flex-col gap-0.5" key={s.number}>
-                            <span>{s.number}</span>. <span>{s.englishName}</span>
-                            <button className={"mt-2 bg-gray-500  text-center text-green-400 py-2 rounded px-6"}
-                                    onClick={
-                                    async () => {
-                                        await fetch("/api/surah/complete", {
-                                            method: "POST",
-                                            body: JSON.stringify({ surahNumber: s.number }),
-                                        })
-                                    async function POST(req: Request) {
-                                        const body = await req.json()
-                                        const {surahNumber} = body
-
-                                        await prisma.surahProgress.update(
-                                        {
-                                            where: {number: surahNumber },
-                                            data: {
-                                                completed: true,
-                                                completedAyahs: s.numberOfAyahs
-                                            }
-                                        })
-                                        return Response.json({ ok: true })
-                                        }
-
-
-
-
-                                    }}>
-                                Mark as Done
-                            </button>
-
-                        </div>
-
-                    ))
-
-                }
-                <div className="flex justify-center gap-4 mt-10 mb-10">
-                    <button
-                        className="px-1 py-2 bg-gray-700 rounded disabled:opacity-30"
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                    >
-                        Previous
-                    </button>
-
-                    <span className="flex items-center text-xl font-bold">Page {page} of 4</span>
-
-                    <button
-                        className="px-4 py-2 bg-gray-700 rounded disabled:opacity-30"
-                        onClick={() => setPage(p => Math.min(4, p + 1))}
-                        disabled={page === 4}
-                    >
-                        Next
-                    </button>
-                </div>
-            </div>
-
-
-        )
     }
