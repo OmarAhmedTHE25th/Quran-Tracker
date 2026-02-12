@@ -1,9 +1,9 @@
 // @ts-ignore
 
-"use client";
 // @ts-ignore
 import {useEffect, useState} from "react";
-// @ts-ignore
+import {initializePrisma} from "@/prisma/prisma";
+const prisma = initializePrisma();
 
 interface Surah{
     number: number
@@ -27,6 +27,7 @@ export async function getSurahData() {
         const [surahs, setSurahs] = useState<Surah[]>([]);
         const [page, setPage] = useState(1);
         const itemsPerPage = 30;
+        const  data = prisma.surahProgress.findMany()
         useEffect(() => {
 
             const fetchMyData = async () => {
@@ -50,20 +51,30 @@ export async function getSurahData() {
                         <div className="border p-4 rounded-lg shadow-md flex flex-col gap-0.5" key={s.number}>
                             <span>{s.number}</span>. <span>{s.englishName}</span>
                             <button className={"mt-2 bg-gray-500  text-center text-green-400 py-2 rounded px-6"}
-                                    onClick={() => {
-                                        setSurahs(
-                                            surahs.map(surah => {
-                                                    if (surah.number === s.number) {
-                                                        let completedSurah = {...surah};
-                                                        completedSurah.completed = true;
-                                                        completedSurah.completedAyahs = surah.numberOfAyahs;
-                                                        return completedSurah;
-                                                    } else {
-                                                        return surah;
-                                                    }
-                                                }
-                                            )
-                                        )
+                                    onClick={
+                                    async () => {
+                                        await fetch("/api/surah/complete", {
+                                            method: "POST",
+                                            body: JSON.stringify({ surahNumber: s.number }),
+                                        })
+                                    async function POST(req: Request) {
+                                        const body = await req.json()
+                                        const {surahNumber} = body
+
+                                        await prisma.surahProgress.update(
+                                        {
+                                            where: {number: surahNumber },
+                                            data: {
+                                                completed: true,
+                                                completedAyahs: s.numberOfAyahs
+                                            }
+                                        })
+                                        return Response.json({ ok: true })
+                                        }
+
+
+
+
                                     }}>
                                 Mark as Done
                             </button>
