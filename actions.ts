@@ -70,3 +70,12 @@ export async function decrementAyahs(surahNumber: number)
     )
     revalidatePath("/");
 }
+export async function resetAll() {
+    await prisma.surahProgress.updateMany({
+        data: {
+            completed: false,
+            completedAyahs: 0
+        }
+    });
+    revalidatePath("/");
+}
