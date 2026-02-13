@@ -40,18 +40,17 @@ export async function incrementAyahs(surahNumber: number)
 {
     const row = await  findSurah(surahNumber)
     if(row.completedAyahs===row.numberOfAyahs)return
-  await prisma.surahProgress.update(
+    let newCompletedAyahs = row.completedAyahs+=1;
+    await prisma.surahProgress.update(
       {
-          where: {number: surahNumber},
+          where: {number: surahNumber
+          },
           data: {
-              completedAyahs: row.completedAyahs+=1
+              completedAyahs: newCompletedAyahs,
+              completed: newCompletedAyahs === row.numberOfAyahs
           }
       }
   )
-
-    if(row.completedAyahs === row.numberOfAyahs){
-        row.completed = true
-    }
     revalidatePath("/");
 }
 
