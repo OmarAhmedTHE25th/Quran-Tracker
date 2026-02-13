@@ -1,6 +1,7 @@
 "use client"
-import {startTransition, useMemo, useState, useTransition} from "react";
-import { markSurahDone, markSurahUndone } from "../actions";
+import {startTransition, useMemo, useState} from "react";
+import { markSurahDone, markSurahUndone,incrementAyahs,decrementAyahs } from "@/actions";
+
 type SurahProgressRow = {
     number: number;
     englishName: string;
@@ -17,32 +18,62 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
         const endIndex = startIndex + itemsPerPage;
         return surahs.slice(startIndex, endIndex);
     }, [surahs, page])
+
     return (
         <div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6 bg-white min-h-screen">
             {
 
-                displayedSurahs.map(s => (
-                    <div className="border p-4 rounded-lg shadow-md flex flex-col gap-0.5" key={s.number}>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <span>{s.number}</span>. <span>{s.englishName}</span>
+                displayedSurahs.map(s => {
+                    const percentage = (s.completedAyahs / s.numberOfAyahs) * 100;
+                    return (
+                        <>
+
+                            <div className="border p-4 rounded-lg shadow-md flex flex-col gap-0.5" key={s.number}>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <span>{s.number}</span>. <span>{s.englishName}</span>
+                                    </div>
+                                    <span className="text-sm">{s.completed ? "Done" : "Not done"}</span>
+                                </div>
+                                <button className={"mt-2 bg-gray-500  text-center text-green-400 py-2 rounded px-6"}
+                                        onClick={() => {
+                                            startTransition(async () => {
+                                                if (s.completed) await markSurahUndone(s.number);
+                                                else await markSurahDone(s.number);
+                                            });
+                                        }}>
+                                    {s.completed ? "Undo" : "Mark as Done"}
+                                </button>
+
                             </div>
-                            <span className="text-sm">{s.completed ? "Done" : "Not done"}</span>
-                        </div>
-                        <button className={"mt-2 bg-gray-500  text-center text-green-400 py-2 rounded px-6"}
-                                onClick={()=>{
-                                    startTransition(async ()=>{
-                                        if (s.completed)await markSurahUndone(s.number)
-                                        else await markSurahDone(s.number)
-                                    })
-                                }}>
-                            {s.completed ? "Undo" : "Mark as Done"}
-                        </button>
+                            <div className={"bg-gray-400 w-full rounded"}>
+                                <button className={"rounded bg-blue-600"} onClick={
+                                    ()=>{
+                                        startTransition(async () =>{
+                                            await incrementAyahs(s.number)
+                                        })
+                                    }
+                                }>
+                                    +
+                                </button>
+                                <div className={"bg-green-400 h-7 rounded align-middle "}>
+                                    {"Progress: "+s.completedAyahs + "/" + s.numberOfAyahs }
+                                </div>
+                                <button className={"rounded bg-blue-600"} onClick={
+                                    ()=>{
+                                        startTransition(async () =>{
+                                            await decrementAyahs(s.number)
+                                        })
+                                    }
+                                }>
+                                    -
+                                </button>
+                            </div>
+                        </>
 
-                    </div>
-
-                ))
+                    );
+                })
             }
             <div className="flex justify-center gap-4 mt-10 mb-10">
                 <button

@@ -2,15 +2,18 @@
 import {initializePrisma} from "@/prisma/prisma";
 import {revalidatePath} from "next/cache";
 const prisma = initializePrisma()
-export async function markSurahDone(surahNumber: number)
-{
-    const row  = await prisma.surahProgress.findUnique(
+async function findSurah(surahNumber: number) {
+    const row = await prisma.surahProgress.findUnique(
         {
-            where: {number :surahNumber},
-            select: {numberOfAyahs: true},
+            where: {number: surahNumber},
         }
     );
-    if(!row)throw new Error("Surah not found in DB")
+    if (!row) throw new Error("Surah not found in DB")
+    return row
+}
+export async function markSurahDone(surahNumber: number)
+{
+    const row  = await findSurah(surahNumber)
     await prisma.surahProgress.update(
         {
             where: {number: surahNumber },
@@ -31,5 +34,40 @@ export async function markSurahUndone(surahNumber:number)
                 completedAyahs: 0
             }
         });
+    revalidatePath("/");
+}
+export async function incrementAyahs(surahNumber: number)
+{
+    const row = await  findSurah(surahNumber)
+    if(row.completedAyahs===row.numberOfAyahs)return
+  await prisma.surahProgress.update(
+      {
+          where: {number: surahNumber},
+          data: {
+              completedAyahs: row.completedAyahs+=1
+          }
+      }
+  )
+
+    if(row.completedAyahs === row.numberOfAyahs){
+        row.completed = true
+    }
+    revalidatePath("/");
+}
+
+
+export async function decrementAyahs(surahNumber: number)
+{
+    const row = await findSurah(surahNumber);
+    if(row.completedAyahs===0)return
+    await prisma.surahProgress.update(
+        {
+            where: {number: surahNumber},
+            data: {
+                completedAyahs: row.completedAyahs-=1,
+                completed: false
+            }
+        }
+    )
     revalidatePath("/");
 }
