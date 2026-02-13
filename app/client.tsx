@@ -48,7 +48,7 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
 
                             </div>
                             <div className={"bg-gray-400 w-full rounded"}>
-                                <button className={"rounded bg-blue-600"} onClick={
+                                <button className={"rounded bg-blue-600 w-8"} onClick={
                                     ()=>{
                                         startTransition(async () =>{
                                             await incrementAyahs(s.number)
@@ -60,7 +60,7 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
                                 <div className={"bg-green-400 h-7 rounded align-middle "}>
                                     {"Progress: "+s.completedAyahs + "/" + s.numberOfAyahs }
                                 </div>
-                                <button className={"rounded bg-blue-600"} onClick={
+                                <button className={"rounded bg-blue-600 w-8"} onClick={
                                     ()=>{
                                         startTransition(async () =>{
                                             await decrementAyahs(s.number)
