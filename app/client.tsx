@@ -40,62 +40,64 @@ onClick={() => {
             >
                 Reset All
             </button>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6 bg-white min-h-screen">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6 items-start">
             {
 
                 displayedSurahs.map(s => {
-                    const percentage = (s.completedAyahs / s.numberOfAyahs) * 100;
                     return (
-                            <div className="border p-4 rounded-lg shadow-md flex flex-col gap-0.5" key={s.number}>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <span>{s.number}</span>. <span>{s.englishName}</span>
-                                    </div>
-                                    <span className="text-sm">{s.completed ? "Done" : "Not done"}</span>
+                        <div className="border p-4 rounded-lg shadow-md flex flex-col gap-0.5" key={s.number}>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <span>{s.number}</span>. <span>{s.englishName}</span>
                                 </div>
-                                <button className={"mt-2 bg-gray-500  text-center text-green-400 py-2 rounded px-6"}
-                                        onClick={() => {
-                                            startTransition(async () => {
-                                                updateOptimistic(prev => prev.map(s2 =>
-                                                    s2.number === s.number
-                                                        ? { ...s2, completed: !s2.completed, completedAyahs: s2.completed ? 0 : s2.numberOfAyahs }
-                                                        : s2
-                                                ));
-                                                if (s.completed) await markSurahUndone(s.number);
-                                                else await markSurahDone(s.number);
-                                            });
-                                        }}>
-                                    {s.completed ? "Undo" : "Mark as Done"}
-                                </button>
-
-                                <div className={" items-center justify-between mt-2"}>
-                                    <button className={"rounded bg-blue-600 w-8"}
-                                            disabled={s.completedAyahs === s.numberOfAyahs} onClick={() => {
+                                <span className="text-sm">{s.completed ? "Done" : "Not done"}</span>
+                            </div>
+                            <button className={"mt-2 bg-gray-500  text-center text-green-400 py-2 rounded px-6"}
+                                    onClick={() => {
                                         startTransition(async () => {
                                             updateOptimistic(prev => prev.map(s2 =>
+                                                s2.number === s.number
+                                                    ? { ...s2, completed: !s2.completed, completedAyahs: s2.completed ? 0 : s2.numberOfAyahs }
+                                                    : s2
+                                            ));
+                                            if (s.completed) await markSurahUndone(s.number);
+                                            else await markSurahDone(s.number);
+                                        });
+                                    }}>
+                                {s.completed ? "Undo" : "Mark as Done"}
+                            </button>
+
+
+                    <div className={" items-center justify-between mt-2"}>
+                        <button className={"rounded bg-blue-600 w-8"} disabled={s.completedAyahs === 0}
+                                onClick={() => {
+                                    startTransition(async () => {
+                                        updateOptimistic(prev => prev.map(s2 => s2.number === s.number
+                                            ? {...s2, completedAyahs: s2.completedAyahs - 1, completed: false}
+                                            : s2
+                                        ));
+                                        await decrementAyahs(s.number);
+                                    });
+                                }}>
+                            -
+                        </button>
+                        <span> {"Progress: " + s.completedAyahs + "/" + s.numberOfAyahs}</span>
+                        <button className={"rounded bg-blue-600 w-8"}
+                    disabled={s.completedAyahs === s.numberOfAyahs} onClick={() => {
+                                startTransition(async () => {
+                                    updateOptimistic(prev => prev.map(s2 =>
                                                 s2.number === s.number
                                                     ? { ...s2, completedAyahs: s2.completedAyahs + 1, completed: s2.completedAyahs + 1 === s2.numberOfAyahs }
                                                     : s2
                                             ));
-                                            await incrementAyahs(s.number);
-                                        });
-                                    }}>
-                                        +
-                                    </button>
-                                    <span> {"Progress: " + s.completedAyahs + "/" + s.numberOfAyahs}</span>
-                                    <button className={"rounded bg-blue-600 w-8"} disabled={s.completedAyahs === 0}
-                                            onClick={() => {
-                                                startTransition(async () => {
-                                                    updateOptimistic(prev => prev.map(s2 => s2.number === s.number
-                                                        ? {...s2, completedAyahs: s2.completedAyahs - 1, completed: false}
-                                                        : s2
-                                                    ));
-                                                    await decrementAyahs(s.number);
-                                                });
-                                            }}>
-                                        -
-                                    </button>
-                                </div>
+                                    await incrementAyahs(s.number);
+                                });
+                            }}>
+                            +
+
+                        </button>
+
+                    </div>
                                 <div className="flex flex-wrap gap-0.5 mt-1">
                                     {Array.from({length: s.numberOfAyahs}).map((_, i) => (
                                         <div

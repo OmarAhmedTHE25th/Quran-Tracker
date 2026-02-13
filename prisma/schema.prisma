@@ -8,6 +8,7 @@ datasource db {
 }
 
 model SurahProgress {
+  userId         String
   number         Int     @id
   englishName    String
   completed      Boolean @default(false)
