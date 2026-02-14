@@ -1,6 +1,7 @@
 "use client"
 import {startTransition, useMemo, useOptimistic, useState} from "react";
 import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll} from "@/actions";
+import { surahDescriptions } from "@/surahDescriptions"
 type SurahProgressRow = {
     userId: string;
     name: string;
@@ -15,7 +16,7 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
     const [page, setPage] = useState(1);
     const itemsPerPage = 20;
     const [optimisticSurahs, updateOptimistic] = useOptimistic<SurahProgressRow[]>(surahs);
-
+    let [openInfo, setOpenInfo] = useState<number | null>(null);
     const totalAyahs = 6236;
     const completedAyahsCount = useMemo(() => {
         return optimisticSurahs.reduce((acc, s) => acc + s.completedAyahs, 0);
@@ -74,7 +75,28 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
                             Reset All Progress
                         </button>
                     </div>
-
+                    {
+                        openInfo !== null && (
+                            <div
+                                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                                onClick={() => setOpenInfo(null)}
+                            >
+                                <div
+                                    className="bg-white rounded-2xl p-6 max-w-md mx-4 shadow-xl"
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    <div className="flex justify-between items-start mb-3">
+                                        <h3 className="font-bold text-lg text-teal-900">
+                                            {displayedSurahs.find(s => s.number === openInfo)?.englishName}
+                                        </h3>
+                                        <button onClick={() => setOpenInfo(null)} className="text-stone-400 hover:text-stone-600">✕</button>
+                                    </div>
+                                    <p className="text-stone-600 leading-relaxed">
+                                        {surahDescriptions[openInfo!].desc}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
                         {
                             displayedSurahs.map(s => {
@@ -98,7 +120,14 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
                                                 <h3 className="font-bold text-stone-800 text-lg leading-tight">{s.englishName + " / " + s.name}</h3>
                                             </div>
                                         </div>
-
+                                        <button
+                                            type="button"
+                                            onClick={() => setOpenInfo(s.number)}
+                                            className="text-sm font-semibold text-teal-700 hover:text-teal-900"
+                                            aria-label={`More info about ${s.englishName}`}
+                                        >
+                                            Info
+                                        </button>
                                         <div
                                             className="flex items-center justify-between text-sm bg-stone-50 p-2 rounded-lg border border-stone-100">
                                             <button
