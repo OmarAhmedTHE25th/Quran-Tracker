@@ -109,16 +109,19 @@ export default async function Home() {
                 userId,
                 number: s.number,
                 englishName: s.englishName,
+                name: s.name,
                 completed: false,
                 completedAyahs: 0,
                 numberOfAyahs: s.numberOfAyahs
             }))
         });
+        // @ts-ignore
         return <SurahClient surahs={
             await prisma.surahProgress.findMany(
                 {where: {userId}, orderBy: {number: "asc"}})
         }/>;
 
     }
+    // @ts-ignore
     return <SurahClient surahs={surahs} />
 }
