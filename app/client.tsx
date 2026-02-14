@@ -92,7 +92,7 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
                                         <button onClick={() => setOpenInfo(null)} className="text-stone-400 hover:text-stone-600">✕</button>
                                     </div>
                                     <p className="text-stone-600 leading-relaxed">
-                                        {surahDescriptions[openInfo!].desc}
+                                        {surahDescriptions[openInfo!].desc + " \nRead more: "+ surahDescriptions[openInfo!].ref}
                                     </p>
                                 </div>
                             </div>
