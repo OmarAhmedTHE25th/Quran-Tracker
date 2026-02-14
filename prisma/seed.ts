@@ -2,6 +2,7 @@ import {initializePrisma} from "@/prisma/prisma";
 const prisma = initializePrisma();
 
 type ApiSurah = {
+  name: string;
   number: number;
   englishName: string;
   numberOfAyahs: number;
@@ -17,6 +18,7 @@ async function main() {
     data: fetchedSurahs.map((s) => ({
       number: s.number,
       englishName: s.englishName,
+      name: s.name,
       completed: false,
       completedAyahs: 0,
       numberOfAyahs: s.numberOfAyahs

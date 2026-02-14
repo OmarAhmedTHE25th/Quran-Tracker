@@ -2,6 +2,7 @@
 import {startTransition, useMemo, useOptimistic, useState} from "react";
 import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll} from "@/actions";
 type SurahProgressRow = {
+    name: string;
     number: number;
     englishName: string;
     completed: boolean;
@@ -43,7 +44,7 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
                 </div>
                 <div className="w-full bg-stone-100 rounded-full h-4 overflow-hidden border border-stone-200">
                     <div
-                        className="bg-gradient-to-r from-teal-600 to-teal-400 h-full rounded-full transition-all duration-500 ease-out"
+                        className="bg-linear-to-r from-teal-600 to-teal-400 h-full rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${percentage}%` }}
                     />
                 </div>
@@ -87,7 +88,7 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
                                     <span className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-50 text-teal-700 font-bold text-sm border border-teal-100">
                                         {s.number}
                                     </span>
-                                    <h3 className="font-bold text-stone-800 text-lg leading-tight">{s.englishName}</h3>
+                                    <h3 className="font-bold text-stone-800 text-lg leading-tight">{s.englishName + " / " + s.name}</h3>
                                 </div>
                             </div>
 
@@ -132,7 +133,7 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
                                 {Array.from({length: s.numberOfAyahs}).map((_, i) => (
                                     <div
                                         key={i}
-                                        className={`h-1.5 flex-1 min-w-[2px] rounded-full transition-colors ${i < s.completedAyahs ? "bg-teal-500" : "bg-stone-200"}`}/>
+                                        className={`h-1.5 flex-1 min-w-0.5 rounded-full transition-colors ${i < s.completedAyahs ? "bg-teal-500" : "bg-stone-200"}`}/>
                                 ))}
                             </div>
 

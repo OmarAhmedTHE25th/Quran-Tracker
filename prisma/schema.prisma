@@ -11,6 +11,7 @@ model SurahProgress {
   userId         String @default("")
   number         Int
   englishName    String
+  name     String @default("")
   completed      Boolean @default(false)
   numberOfAyahs Int  @default(0)
   completedAyahs Int     @default(0)
