@@ -101,7 +101,9 @@ export async function decrementAyahs(surahNumber: number)
     revalidatePath("/");
 }
 export async function resetAll() {
+    const userId = await getUserId()
     await prisma.surahProgress.updateMany({
+        where: { userId },
         data: {
             completed: false,
             completedAyahs: 0
