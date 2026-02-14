@@ -9,6 +9,7 @@ import {
 } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
+import React from "react";
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -33,17 +34,33 @@ export default function RootLayout({
   return (
       <ClerkProvider>
         <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <header>
-          <SignedOut>
-            <SignInButton />
-            <SignUpButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#fdfaf3] text-stone-900`}>
+        <header className="bg-teal-900 text-amber-50 shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <h1 className="text-2xl font-bold tracking-tight text-amber-400">Quran Tracker</h1>
+            <div className="flex items-center gap-4">
+              <SignedOut>
+                <div className="flex gap-2">
+                  <SignInButton mode="modal">
+                    <button className="text-sm font-medium hover:text-amber-400 transition-colors">Sign In</button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="text-sm font-medium bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-md transition-colors text-white">Sign Up</button>
+                  </SignUpButton>
+                </div>
+              </SignedOut>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+            </div>
+          </div>
         </header>
-        {children}
+        <main className="min-h-screen">
+          {children}
+        </main>
+        <footer className="py-8 text-center text-stone-500 text-sm">
+          <p>© {new Date().getFullYear()} Quran Tracker • Ramadan Kareem</p>
+        </footer>
         </body>
         </html>
       </ClerkProvider>

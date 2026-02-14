@@ -1,3 +1,4 @@
+import "server-only"
 import "dotenv/config";
 import {PrismaClient} from "@prisma/client";
 import {Pool} from "pg";

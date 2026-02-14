@@ -8,10 +8,11 @@ datasource db {
 }
 
 model SurahProgress {
-  userId         String
-  number         Int     @id
+  userId         String @default("")
+  number         Int
   englishName    String
   completed      Boolean @default(false)
   numberOfAyahs Int  @default(0)
   completedAyahs Int     @default(0)
+  @@id([userId,number])
 }
