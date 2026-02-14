@@ -115,13 +115,11 @@ export default async function Home() {
                 numberOfAyahs: s.numberOfAyahs
             }))
         });
-        // @ts-ignore
         return <SurahClient surahs={
             await prisma.surahProgress.findMany(
                 {where: {userId}, orderBy: {number: "asc"}})
         }/>;
 
     }
-    // @ts-ignore
     return <SurahClient surahs={surahs} />
 }
