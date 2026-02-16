@@ -176,3 +176,17 @@ async function updateStreak(userId: string) {
         });
     }
 }
+export async function setAyahs(surahNumber: number, count: number) {
+    const userId = await getUserId()
+    const row = await findSurah(surahNumber)
+    const clamped = Math.min(Math.max(0, count), row.numberOfAyahs)
+    await prisma.surahProgress.update({
+        where: { userId_number: { number: surahNumber, userId } },
+        data: {
+            completedAyahs: clamped,
+            completed: clamped === row.numberOfAyahs
+        }
+    })
+    await updateStreak(userId)
+    revalidatePath("/")
+}

@@ -1,6 +1,6 @@
 "use client"
 import {startTransition, useMemo, useOptimistic, useState} from "react";
-import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll} from "@/actions";
+import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll, setAyahs} from "@/actions";
 import {juzAyahCount} from "@/juzAyahCount";
 import { surahDescriptions } from "@/surahDescriptions"
 type SurahProgressRow = {
@@ -22,7 +22,16 @@ type UserStreak = {
 export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[], streak: UserStreak | null}){
     const [page, setPage] = useState(1);
     const itemsPerPage = 20;
-    const [optimisticSurahs, updateOptimistic] = useOptimistic<SurahProgressRow[]>(surahs);
+    const [optimisticSurahs, updateOptimisticSurahs] = useOptimistic<SurahProgressRow[]>(surahs);
+    const [optimisticStreak, updateOptimisticStreak] = useOptimistic<number>(streak?.streakCount ?? 0);
+    const [editingAyahs, setEditingAyahs] = useState<Record<number, string>>({});
+    function handleStreakOptimistic() {
+        const lastDate = streak?.lastDate ? new Date(streak.lastDate) : null;
+        const today = new Date();
+        if (!lastDate || lastDate.toDateString() !== today.toDateString()) {
+            updateOptimisticStreak(prev => prev + 1);
+        }
+    }
     let [openInfo, setOpenInfo] = useState<number | null>(null);
     const totalAyahs = 6236;
     const completedAyahsCount = useMemo(() => {
@@ -49,7 +58,7 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
                             <div className="text-4xl drop-shadow-sm">🔥</div>
                             <div>
                                 <div className="text-orange-100 text-xs font-bold uppercase tracking-wider">Daily Streak</div>
-                                <div className="text-3xl font-black">{streak?.streakCount || 0} Days</div>
+                                <div className="text-3xl font-black">{optimisticStreak || 0} Days</div>
                             </div>
                         </div>
                         <div className="bg-linear-to-br from-teal-600 to-emerald-600 rounded-2xl p-6 text-white shadow-md flex items-center gap-4 transition-transform hover:scale-[1.02]">
@@ -95,7 +104,8 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
                             onClick={() => {
                                 if (confirm("Are you sure you want to reset all progress?")) {
                                     startTransition(async () => {
-                                        updateOptimistic((prev) =>
+                                        handleStreakOptimistic();
+                                        updateOptimisticSurahs((prev) =>
                                             prev.map((s2) => ({
                                                 ...s2,
                                                 completed: false,
@@ -173,19 +183,15 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
                                         >
                                             Info
                                         </button>
-                                        <div
-                                            className="flex items-center justify-between text-sm bg-stone-50 p-2 rounded-lg border border-stone-100">
+                                        <div className="flex items-center justify-between text-sm bg-stone-50 p-2 rounded-lg border border-stone-100">
                                             <button
                                                 className="w-8 h-8 flex items-center justify-center rounded-md bg-white border border-stone-200 text-stone-600 hover:border-teal-500 hover:text-teal-600 disabled:opacity-30 transition-all shadow-sm"
                                                 disabled={s.completedAyahs === 0}
                                                 onClick={() => {
                                                     startTransition(async () => {
-                                                        updateOptimistic(prev => prev.map(s2 => s2.number === s.number
-                                                            ? {
-                                                                ...s2,
-                                                                completedAyahs: s2.completedAyahs - 1,
-                                                                completed: false
-                                                            }
+                                                        handleStreakOptimistic();
+                                                        updateOptimisticSurahs(prev => prev.map(s2 => s2.number === s.number
+                                                            ? { ...s2, completedAyahs: s2.completedAyahs - 1, completed: false }
                                                             : s2
                                                         ));
                                                         await decrementAyahs(s.number);
@@ -194,23 +200,47 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
                                             >
                                                 -
                                             </button>
-                                            <span className="font-semibold text-stone-700">
-                                    {s.completedAyahs} <span
-                                                className="text-stone-400 font-normal mx-0.5">/</span> {s.numberOfAyahs}
-                                </span>
+
+                                            <div className="flex items-center gap-1 font-semibold text-stone-700">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={s.numberOfAyahs}
+                                                    value={editingAyahs[s.number] ?? s.completedAyahs}
+                                                    onChange={e => setEditingAyahs(prev => ({ ...prev, [s.number]: e.target.value }))}
+                                                    onBlur={e => {
+                                                        const val = Math.min(Math.max(0, parseInt(e.target.value) || 0), s.numberOfAyahs);
+                                                        setEditingAyahs(prev => {
+                                                            const next = { ...prev };
+                                                            delete next[s.number];
+                                                            return next;
+                                                        });
+                                                        if (val === s.completedAyahs) return;
+                                                        startTransition(async () => {
+                                                            handleStreakOptimistic();
+                                                            updateOptimisticSurahs(prev => prev.map(s2 => s2.number === s.number
+                                                                ? { ...s2, completedAyahs: val, completed: val === s2.numberOfAyahs }
+                                                                : s2
+                                                            ));
+                                                            await setAyahs(s.number, val);
+                                                        });
+                                                    }}
+                                                    onKeyDown={e => e.key === "Enter" && e.currentTarget.blur()}
+                                                    className="w-12 text-center bg-transparent focus:outline-none focus:ring-1 focus:ring-teal-400 rounded px-1"
+                                                />
+                                                <span className="text-stone-400 font-normal mx-0.5">/</span>
+                                                <span>{s.numberOfAyahs}</span>
+                                            </div>
+
                                             <button
                                                 className="w-8 h-8 flex items-center justify-center rounded-md bg-white border border-stone-200 text-stone-600 hover:border-teal-500 hover:text-teal-600 disabled:opacity-30 transition-all shadow-sm"
                                                 disabled={s.completedAyahs === s.numberOfAyahs}
                                                 onClick={() => {
                                                     startTransition(async () => {
-                                                        updateOptimistic(prev => prev.map(s2 =>
-                                                            s2.number === s.number
-                                                                ? {
-                                                                    ...s2,
-                                                                    completedAyahs: s2.completedAyahs + 1,
-                                                                    completed: s2.completedAyahs + 1 === s2.numberOfAyahs
-                                                                }
-                                                                : s2
+                                                        handleStreakOptimistic();
+                                                        updateOptimisticSurahs(prev => prev.map(s2 => s2.number === s.number
+                                                            ? { ...s2, completedAyahs: s2.completedAyahs + 1, completed: s2.completedAyahs + 1 === s2.numberOfAyahs }
+                                                            : s2
                                                         ));
                                                         await incrementAyahs(s.number);
                                                     });
@@ -236,7 +266,8 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
                                             }`}
                                             onClick={() => {
                                                 startTransition(async () => {
-                                                    updateOptimistic(prev => prev.map(s2 =>
+                                                    handleStreakOptimistic();
+                                                    updateOptimisticSurahs(prev => prev.map(s2 =>
                                                         s2.number === s.number
                                                             ? {
                                                                 ...s2,
