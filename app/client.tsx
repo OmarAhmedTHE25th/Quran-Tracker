@@ -1,6 +1,7 @@
 "use client"
 import {startTransition, useMemo, useOptimistic, useState} from "react";
 import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll} from "@/actions";
+import {juzAyahCount} from "@/juzAyahCount";
 import { surahDescriptions } from "@/surahDescriptions"
 type SurahProgressRow = {
     userId: string;
@@ -12,7 +13,13 @@ type SurahProgressRow = {
     numberOfAyahs: number;
 };
 
-export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
+type UserStreak = {
+    userId: string;
+    streakCount: number;
+    lastDate: Date | null;
+};
+
+export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[], streak: UserStreak | null}){
     const [page, setPage] = useState(1);
     const itemsPerPage = 20;
     const [optimisticSurahs, updateOptimistic] = useOptimistic<SurahProgressRow[]>(surahs);
@@ -21,6 +28,9 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
     const completedAyahsCount = useMemo(() => {
         return optimisticSurahs.reduce((acc, s) => acc + s.completedAyahs, 0);
     }, [optimisticSurahs]);
+    const currentJuz = Object.entries(juzAyahCount).find(
+        ([_, cumulative]) => completedAyahsCount <= cumulative
+    )?.[0]
     const percentage = Math.round((completedAyahsCount / totalAyahs) * 100);
 
     const displayedSurahs = useMemo(()=>{
@@ -33,6 +43,31 @@ export default function SurahClient({surahs}:{surahs: SurahProgressRow[]}){
         <div>
             {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Streak and Current Juz Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <div className="bg-linear-to-br from-orange-500 to-amber-500 rounded-2xl p-6 text-white shadow-md flex items-center gap-4 transition-transform hover:scale-[1.02]">
+                            <div className="text-4xl drop-shadow-sm">🔥</div>
+                            <div>
+                                <div className="text-orange-100 text-xs font-bold uppercase tracking-wider">Daily Streak</div>
+                                <div className="text-3xl font-black">{streak?.streakCount || 0} Days</div>
+                            </div>
+                        </div>
+                        <div className="bg-linear-to-br from-teal-600 to-emerald-600 rounded-2xl p-6 text-white shadow-md flex items-center gap-4 transition-transform hover:scale-[1.02]">
+                            <div className="text-4xl drop-shadow-sm">📖</div>
+                            <div>
+                                <div className="text-teal-100 text-xs font-bold uppercase tracking-wider">Active Juz</div>
+                                <div className="text-3xl font-black">Juz {currentJuz}</div>
+                            </div>
+                        </div>
+                        <div className="bg-linear-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-md flex items-center gap-4 transition-transform hover:scale-[1.02]">
+                            <div className="text-4xl drop-shadow-sm">✨</div>
+                            <div>
+                                <div className="text-blue-100 text-xs font-bold uppercase tracking-wider">Completed</div>
+                                <div className="text-3xl font-black">{completedAyahsCount} Ayahs</div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Overall Progress Section */}
                     <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 mb-8">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">

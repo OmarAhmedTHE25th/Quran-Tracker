@@ -17,3 +17,9 @@ model SurahProgress {
   completedAyahs Int     @default(0)
   @@id([userId,number])
 }
+
+model UserStreak {
+  userId      String   @id
+  streakCount Int      @default(0)
+  lastDate    DateTime?
+}

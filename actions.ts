@@ -40,6 +40,7 @@ export async function markSurahDone(surahNumber: number)
                 completedAyahs: row.numberOfAyahs
             }
         });
+    await updateStreak(userId);
     revalidatePath("/");
 }
 export async function markSurahUndone(surahNumber:number)
@@ -77,6 +78,7 @@ export async function incrementAyahs(surahNumber: number)
           }
       }
   )
+    await updateStreak(userId);
     revalidatePath("/");
 }
 
@@ -98,6 +100,7 @@ export async function decrementAyahs(surahNumber: number)
             }
         }
     )
+    await updateStreak(userId);
     revalidatePath("/");
 }
 export async function resetAll() {
@@ -109,5 +112,67 @@ export async function resetAll() {
             completedAyahs: 0
         }
     });
+    await prisma.userStreak.upsert({
+        where: { userId },
+        update: {
+            streakCount: 0,
+            lastDate: null
+        },
+        create: {
+            userId,
+            streakCount: 0,
+            lastDate: null
+        }
+    });
     revalidatePath("/");
+}
+
+async function updateStreak(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const streak = await prisma.userStreak.findUnique({
+        where: { userId }
+    });
+
+    if (!streak) {
+        await prisma.userStreak.create({
+            data: {
+                userId,
+                streakCount: 1,
+                lastDate: today
+            }
+        });
+        return;
+    }
+
+    const lastDate = streak.lastDate ? new Date(streak.lastDate) : null;
+    if (lastDate) {
+        lastDate.setHours(0, 0, 0, 0);
+    }
+
+    if (lastDate && lastDate.getTime() === today.getTime()) {
+        return;
+    }
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (lastDate && lastDate.getTime() === yesterday.getTime()) {
+        await prisma.userStreak.update({
+            where: { userId },
+            data: {
+                streakCount: streak.streakCount + 1,
+                lastDate: today
+            }
+        });
+    } else {
+        await prisma.userStreak.update({
+            where: { userId },
+            data: {
+                streakCount: 1,
+                lastDate: today
+            }
+        });
+    }
 }

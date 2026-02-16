@@ -99,6 +99,10 @@ export default async function Home() {
         orderBy: {number: "asc"},
     });
 
+    const streak = await prisma.userStreak.findUnique({
+        where: { userId }
+    });
+
     console.log("surahs count:", surahs.length)
     console.log("userId:", userId)
     if (surahs.length === 0) {
@@ -118,8 +122,8 @@ export default async function Home() {
         return <SurahClient surahs={
             await prisma.surahProgress.findMany(
                 {where: {userId}, orderBy: {number: "asc"}})
-        }/>;
+        } streak={streak}/>;
 
     }
-    return <SurahClient surahs={surahs} />
+    return <SurahClient surahs={surahs} streak={streak}/>
 }
