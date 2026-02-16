@@ -46,7 +46,9 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
         ([_, cumulative]) => completedAyahsCount <= cumulative
     )?.[0]
     const percentage = Math.round((completedAyahsCount / totalAyahs) * 100);
-
+    const completedSurahsCount = useMemo(() =>
+            optimisticSurahs.filter(s => s.completed).length
+        , [optimisticSurahs]);
     const displayedSurahs = useMemo(()=>{
         const startIndex = (page - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
@@ -74,10 +76,10 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
                             </div>
                         </div>
                         <div className="bg-linear-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-md flex items-center gap-4 transition-transform hover:scale-[1.02]">
-                            <div className="text-4xl drop-shadow-sm">✨</div>
+                            <div className="text-4xl drop-shadow-sm">📚</div>
                             <div>
-                                <div className="text-blue-100 text-xs font-bold uppercase tracking-wider">Completed</div>
-                                <div className="text-3xl font-black">{completedAyahsCount} Ayahs</div>
+                                <div className="text-teal-100 text-xs font-bold uppercase tracking-wider">Completed</div>
+                                <div className="text-3xl font-black">{completedSurahsCount} / 114 Surahs</div>
                             </div>
                         </div>
                     </div>

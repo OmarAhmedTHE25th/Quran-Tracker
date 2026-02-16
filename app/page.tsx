@@ -93,14 +93,14 @@ function LandingPage() {
 export default async function Home() {
     const prisma = initializePrisma();
     const {userId} = await auth()
-    if (!userId) return <LandingPage />
+    if (!userId) return <LandingPage/>
     const surahs = await prisma.surahProgress.findMany({
         where: {userId: userId},
         orderBy: {number: "asc"},
     });
 
     const streak = await prisma.userStreak.findUnique({
-        where: { userId }
+        where: {userId}
     });
 
     console.log("surahs count:", surahs.length)
@@ -125,5 +125,18 @@ export default async function Home() {
         } streak={streak}/>;
 
     }
-    return <SurahClient surahs={surahs} streak={streak}/>
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const lastDate = streak?.lastDate ? new Date(streak.lastDate) : null;
+    if (lastDate) lastDate.setHours(0, 0, 0, 0);
+    const streakIsStale = lastDate && lastDate.getTime() < yesterday.getTime();
+
+    const effectiveStreak = streak && streakIsStale
+        ? { ...streak, streakCount: 0 }
+        : streak;
+
+    return <SurahClient surahs={surahs} streak={effectiveStreak} />
 }
