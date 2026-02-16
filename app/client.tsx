@@ -1,5 +1,5 @@
 "use client"
-import {startTransition, useMemo, useOptimistic, useState} from "react";
+import {startTransition, useMemo, useOptimistic, useRef, useState} from "react";
 import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll, setAyahs} from "@/actions";
 import {juzAyahCount} from "@/juzAyahCount";
 import { surahDescriptions } from "@/surahDescriptions"
@@ -25,10 +25,15 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
     const [optimisticSurahs, updateOptimisticSurahs] = useOptimistic<SurahProgressRow[]>(surahs);
     const [optimisticStreak, updateOptimisticStreak] = useOptimistic<number>(streak?.streakCount ?? 0);
     const [editingAyahs, setEditingAyahs] = useState<Record<number, string>>({});
+    const streakBumpedToday = useRef(false);
+
     function handleStreakOptimistic() {
         const lastDate = streak?.lastDate ? new Date(streak.lastDate) : null;
         const today = new Date();
-        if (!lastDate || lastDate.toDateString() !== today.toDateString()) {
+        const alreadyBumpedOnServer = lastDate?.toDateString() === today.toDateString();
+
+        if (!alreadyBumpedOnServer && !streakBumpedToday.current) {
+            streakBumpedToday.current = true;
             updateOptimisticStreak(prev => prev + 1);
         }
     }
