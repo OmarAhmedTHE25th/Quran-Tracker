@@ -212,7 +212,8 @@ export async function updateQuranPage(page: number) {
 /**
  * Distributes a total ayah count across surahs in order (1, 2, 3…),
  * filling each surah completely before moving to the next.
- * Used to sync page tracker → ayah progress.
+ * Uses Promise.all instead of a transaction to avoid the 5s timeout
+ * when updating all 114 surahs at once.
  */
 export async function setTotalCompletedAyahs(total: number) {
     const userId = await getUserId()
@@ -221,20 +222,24 @@ export async function setTotalCompletedAyahs(total: number) {
         orderBy: { number: 'asc' }
     })
 
+    // Compute per-surah values in JS first (no extra DB round-trips)
     let remaining = Math.max(0, total)
-    await prisma.$transaction(
-        surahs.map(surah => {
-            const completed = Math.min(remaining, surah.numberOfAyahs)
-            remaining = Math.max(0, remaining - completed)
-            return prisma.surahProgress.update({
-                where: { userId_number: { userId, number: surah.number } },
-                data: {
-                    completedAyahs: completed,
-                    completed: completed === surah.numberOfAyahs
-                }
+    const updates = surahs.map(surah => {
+        const completed = Math.min(remaining, surah.numberOfAyahs)
+        remaining = Math.max(0, remaining - completed)
+        return { number: surah.number, completed, isDone: completed === surah.numberOfAyahs }
+    })
+
+    // Fire all 114 updates in parallel — independent rows, no transaction needed
+    await Promise.all(
+        updates.map(u =>
+            prisma.surahProgress.update({
+                where: { userId_number: { userId, number: u.number } },
+                data: { completedAyahs: u.completed, completed: u.isDone }
             })
-        })
+        )
     )
+
     await updateStreak(userId)
     revalidatePath("/")
 }

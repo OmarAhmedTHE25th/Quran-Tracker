@@ -34,11 +34,11 @@ export default function RootLayout({
   return (
       <ClerkProvider>
         <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#fdfaf3] text-stone-900`}>
+        <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#fdfaf3] text-stone-900`}>
         <header className="bg-teal-900 text-amber-50 shadow-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <h1 className="text-2xl font-bold tracking-tight text-amber-400">Quran Tracker</h1>
-            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4" suppressHydrationWarning>
               <SignedOut>
                 <div className="flex gap-2">
                   <SignInButton mode="modal">
