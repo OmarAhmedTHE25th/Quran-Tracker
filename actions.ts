@@ -66,18 +66,18 @@ export async function incrementAyahs(surahNumber: number)
     if(row.completedAyahs===row.numberOfAyahs)return
     let newCompletedAyahs = row.completedAyahs+=1;
     await prisma.surahProgress.update(
-      {
-          where: {userId_number: {
-                  number: surahNumber,
-                  userId : userId
-              }
-          },
-          data: {
-              completedAyahs: newCompletedAyahs,
-              completed: newCompletedAyahs === row.numberOfAyahs
-          }
-      }
-  )
+        {
+            where: {userId_number: {
+                    number: surahNumber,
+                    userId : userId
+                }
+            },
+            data: {
+                completedAyahs: newCompletedAyahs,
+                completed: newCompletedAyahs === row.numberOfAyahs
+            }
+        }
+    )
     await updateStreak(userId);
     revalidatePath("/");
 }
@@ -206,5 +206,35 @@ export async function updateQuranPage(page: number) {
             lastDate: null
         }
     })
+    revalidatePath("/")
+}
+
+/**
+ * Distributes a total ayah count across surahs in order (1, 2, 3…),
+ * filling each surah completely before moving to the next.
+ * Used to sync page tracker → ayah progress.
+ */
+export async function setTotalCompletedAyahs(total: number) {
+    const userId = await getUserId()
+    const surahs = await prisma.surahProgress.findMany({
+        where: { userId },
+        orderBy: { number: 'asc' }
+    })
+
+    let remaining = Math.max(0, total)
+    await prisma.$transaction(
+        surahs.map(surah => {
+            const completed = Math.min(remaining, surah.numberOfAyahs)
+            remaining = Math.max(0, remaining - completed)
+            return prisma.surahProgress.update({
+                where: { userId_number: { userId, number: surah.number } },
+                data: {
+                    completedAyahs: completed,
+                    completed: completed === surah.numberOfAyahs
+                }
+            })
+        })
+    )
+    await updateStreak(userId)
     revalidatePath("/")
 }
