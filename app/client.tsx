@@ -61,6 +61,7 @@ function computeCumulativeAyahs(
 
 export default function SurahClient({ surahs, streak }: { surahs: SurahProgressRow[], streak: UserStreak | null }) {
     const [page, setPage] = useState(1);
+    const [sliderValue, setSliderValue] = useState(streak?.currentPage ?? 1);
     const itemsPerPage = 20;
     const [optimisticSurahs, updateOptimisticSurahs] = useOptimistic<SurahProgressRow[]>(surahs);
     const [optimisticStreak, updateOptimisticStreak] = useOptimistic<number>(streak?.streakCount ?? 0);
@@ -102,9 +103,16 @@ export default function SurahClient({ surahs, streak }: { surahs: SurahProgressR
     }, []);
 
     useEffect(() => {
-        const timer = setTimeout(() => fetchPageInfo(optimisticQuranPage), 500);
+        const timer = setTimeout(() => {
+            fetchPageInfo(optimisticQuranPage);
+        }, 500);
         return () => clearTimeout(timer);
     }, [fetchPageInfo, optimisticQuranPage]);
+
+// ADD THIS RIGHT HERE
+    useEffect(() => {
+        setSliderValue(optimisticQuranPage);
+    }, [optimisticQuranPage]);
 
     // ─── Page → Ayahs sync ───────────────────────────────────────────────────
     // When the user moves the page tracker, fetch the ayahs on that page,
@@ -268,13 +276,17 @@ export default function SurahClient({ surahs, streak }: { surahs: SurahProgressR
                                     type="range"
                                     min="1"
                                     max="604"
-                                    value={optimisticQuranPage}
-                                    onChange={e => {
-                                        const val = parseInt(e.target.value);
-                                        if (!isNaN(val)) startTransition(() => { updateOptimisticQuranPage(val); });
+                                    value={sliderValue}
+                                    onChange={(e) => {
+                                        setSliderValue(parseInt(e.target.value));
                                     }}
-                                    onMouseUp={e => handlePageChange(parseInt((e.target as HTMLInputElement).value))}
-                                    onTouchEnd={e => handlePageChange(parseInt((e.target as HTMLInputElement).value))}
+                                    onMouseUp={(e) => {
+                                        handlePageChange(parseInt((e.target as HTMLInputElement).value));
+                                    }}
+                                    onTouchEnd={(e) => {
+                                        handlePageChange(parseInt((e.target as HTMLInputElement).value));
+                                    }}
+
                                     className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-teal-600 border border-stone-200"
                                 />
                                 <div className="flex justify-between text-[10px] font-bold text-stone-400 uppercase tracking-widest">
