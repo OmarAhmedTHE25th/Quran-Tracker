@@ -190,3 +190,21 @@ export async function setAyahs(surahNumber: number, count: number) {
     await updateStreak(userId)
     revalidatePath("/")
 }
+
+export async function updateQuranPage(page: number) {
+    const userId = await getUserId()
+    const clamped = Math.min(Math.max(1, page), 604)
+    await prisma.userStreak.upsert({
+        where: { userId },
+        update: {
+            currentPage: clamped
+        },
+        create: {
+            userId,
+            currentPage: clamped,
+            streakCount: 0,
+            lastDate: null
+        }
+    })
+    revalidatePath("/")
+}

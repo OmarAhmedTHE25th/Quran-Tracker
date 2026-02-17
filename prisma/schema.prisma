@@ -22,4 +22,5 @@ model UserStreak {
   userId      String   @id
   streakCount Int      @default(0)
   lastDate    DateTime?
+  currentPage Int      @default(1)
 }

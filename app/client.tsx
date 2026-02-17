@@ -1,6 +1,6 @@
 "use client"
-import {startTransition, useMemo, useOptimistic, useRef, useState} from "react";
-import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll, setAyahs} from "@/actions";
+import {useCallback, useMemo, useOptimistic, useRef, useState, useTransition, useEffect} from "react";
+import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll, setAyahs, updateQuranPage} from "@/actions";
 import {juzAyahCount} from "@/juzAyahCount";
 import { surahDescriptions } from "@/surahDescriptions"
 type SurahProgressRow = {
@@ -17,6 +17,7 @@ type UserStreak = {
     userId: string;
     streakCount: number;
     lastDate: Date | null;
+    currentPage: number;
 };
 
 export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[], streak: UserStreak | null}){
@@ -24,7 +25,9 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
     const itemsPerPage = 20;
     const [optimisticSurahs, updateOptimisticSurahs] = useOptimistic<SurahProgressRow[]>(surahs);
     const [optimisticStreak, updateOptimisticStreak] = useOptimistic<number>(streak?.streakCount ?? 0);
+    const [optimisticQuranPage, updateOptimisticQuranPage] = useOptimistic<number>(streak?.currentPage ?? 1);
     const [editingAyahs, setEditingAyahs] = useState<Record<number, string>>({});
+    const [pageInfo, setPageInfo] = useState<{surah: string, juz: number} | null>(null);
     const streakBumpedToday = useRef(false);
 
     function handleStreakOptimistic() {
@@ -38,7 +41,42 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
         }
     }
     let [openInfo, setOpenInfo] = useState<number | null>(null);
+    const [isPending, startTransition] = useTransition();
+
+    const fetchPageInfo = useCallback(async (pageNum: number) => {
+        try {
+            const res = await fetch(`https://api.alquran.cloud/v1/page/${pageNum}/quran-uthmani`);
+            const json = await res.json();
+            if (json.data && json.data.ayahs.length > 0) {
+                const firstAyah = json.data.ayahs[0];
+                setPageInfo({
+                    surah: firstAyah.surah.englishName,
+                    juz: firstAyah.juz
+                });
+            }
+        } catch (error) {
+            console.error("Failed to fetch page info", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchPageInfo(optimisticQuranPage);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [fetchPageInfo, optimisticQuranPage]);
+
+    const handlePageChange = async (newPage: number) => {
+        const clamped = Math.min(Math.max(1, newPage), 604);
+        startTransition(async () => {
+            updateOptimisticQuranPage(clamped);
+            await updateQuranPage(clamped);
+        });
+    }
+
     const totalAyahs = 6236;
+    const totalPages = 604;
+    const pagePercentage = Math.round((optimisticQuranPage / totalPages) * 100);
     const completedAyahsCount = useMemo(() => {
         return optimisticSurahs.reduce((acc, s) => acc + s.completedAyahs, 0);
     }, [optimisticSurahs]);
@@ -80,6 +118,106 @@ export default function SurahClient({surahs, streak}:{surahs: SurahProgressRow[]
                             <div>
                                 <div className="text-teal-100 text-xs font-bold uppercase tracking-wider">Completed</div>
                                 <div className="text-3xl font-black">{completedSurahsCount} / 114 Surahs</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Quran Page Tracker Section */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 mb-8">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <h2 className="text-xl font-semibold text-teal-900">Quran Page Tracker</h2>
+                                    <div className="flex items-center bg-teal-100 rounded-full px-3 py-1 border border-teal-200">
+                                        <span className="text-teal-700 text-xs font-bold uppercase tracking-wider mr-2">Page</span>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="604"
+                                            value={optimisticQuranPage}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value);
+                                                if (!isNaN(val)) {
+                                                    startTransition(() => {
+                                                        updateOptimisticQuranPage(val);
+                                                    });
+                                                }
+                                            }}                                            onBlur={(e) => {
+                                                const val = parseInt(e.target.value);
+                                                if (!isNaN(val) && val >= 1 && val <= 604) {
+                                                    handlePageChange(val);
+                                                }
+                                            }}
+                                            className="bg-transparent text-teal-900 font-black text-sm w-12 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-stone-500 text-sm mb-6">
+                                    {pageInfo ? (
+                                        <>Currently in <span className="font-semibold text-teal-700">Surah {pageInfo.surah}</span>, <span className="font-semibold text-teal-700">Juz {pageInfo.juz}</span></>
+                                    ) : (
+                                        "Loading page details..."
+                                    )}
+                                </p>
+                                
+                                <div className="space-y-4">
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="604"
+                                        value={optimisticQuranPage}
+                                        onChange={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            if (!isNaN(val)) {
+                                                startTransition(() => {
+                                                    updateOptimisticQuranPage(val);
+                                                });
+                                            }
+                                        }}
+                                        onMouseUp={(e) => {
+                                            handlePageChange(parseInt((e.target as HTMLInputElement).value));
+                                        }}
+                                        onTouchEnd={(e) => {
+                                            handlePageChange(parseInt((e.target as HTMLInputElement).value));
+                                        }}
+                                        className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-teal-600 border border-stone-200"
+                                    />
+                                    <div className="flex justify-between text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                                        <span>Page 1</span>
+                                        <span>604 Pages</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-center justify-center p-4 bg-teal-50 rounded-2xl border border-teal-100 min-w-[140px]">
+                                <div className="relative w-24 h-24 mb-2">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle
+                                            cx="48"
+                                            cy="48"
+                                            r="40"
+                                            stroke="currentColor"
+                                            strokeWidth="8"
+                                            fill="transparent"
+                                            className="text-teal-100"
+                                        />
+                                        <circle
+                                            cx="48"
+                                            cy="48"
+                                            r="40"
+                                            stroke="currentColor"
+                                            strokeWidth="8"
+                                            fill="transparent"
+                                            strokeDasharray={251.2}
+                                            strokeDashoffset={251.2 - (251.2 * pagePercentage) / 100}
+                                            className="text-teal-600 transition-all duration-500 ease-out"
+                                        />
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="text-xl font-black text-teal-900">{pagePercentage}%</span>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-bold text-teal-700 uppercase tracking-widest">Completed</span>
                             </div>
                         </div>
                     </div>
