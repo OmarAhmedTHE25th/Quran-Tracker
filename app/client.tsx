@@ -493,11 +493,13 @@ export default function SurahClient({ surahs, streak }: { surahs: SurahProgressR
                             </div>
 
                             {/* Ayah progress dots */}
-                            <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden border border-stone-100">
-                                <div
-                                    className="h-full bg-teal-500 rounded-full transition-all duration-300"
-                                    style={{ width: `${(s.completedAyahs / s.numberOfAyahs) * 100}%` }}
-                                />
+                            <div className="flex flex-wrap gap-1">
+                                {Array.from({length: s.numberOfAyahs}).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={`h-1.5 flex-1 min-w-0.5 rounded-full transition-colors ${i < s.completedAyahs ? "bg-teal-500" : "bg-stone-200"}`}
+                                    />
+                                ))}
                             </div>
 
                             {/* Complete / Incomplete button */}
