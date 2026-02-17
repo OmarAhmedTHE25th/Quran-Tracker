@@ -3,7 +3,7 @@ import {useCallback, useMemo, useOptimistic, useRef, useState, useTransition, us
 import {markSurahDone, markSurahUndone, incrementAyahs, decrementAyahs, resetAll, setAyahs, updateQuranPage, setTotalCompletedAyahs} from "@/actions";
 import {juzAyahCount} from "@/juzAyahCount";
 import { surahDescriptions } from "@/surahDescriptions"
-
+import Link from "next/link";
 type SurahProgressRow = {
     userId: string;
     name: string;
@@ -338,14 +338,28 @@ export default function SurahClient({ surahs, streak }: { surahs: SurahProgressR
                 </div>
 
                 {/* ── Reset ───────────────────────────────────────────────── */}
-                <div className="flex justify-end mb-6">
+
+                <div className="flex items-center justify-between mb-6">
+                    <Link
+                        href="/ramadan"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold text-sm rounded-xl shadow-md transition-all hover:scale-[1.02]"
+                    >
+                        <span className="text-base">🌙</span>
+                        Ramadan Goal & Prayer Times
+                    </Link>
                     <button
                         className="text-red-600 hover:text-white border border-red-200 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm"
                         onClick={() => {
                             if (confirm("Are you sure you want to reset all progress?")) {
                                 startTransition(async () => {
-                                    updateOptimisticSurahs(prev => prev.map(s2 => ({ ...s2, completed: false, completedAyahs: 0 })));
-                                    updateOptimisticQuranPage(1);
+                                    handleStreakOptimistic();
+                                    updateOptimisticSurahs((prev) =>
+                                        prev.map((s2) => ({
+                                            ...s2,
+                                            completed: false,
+                                            completedAyahs: 0,
+                                        }))
+                                    );
                                     await resetAll();
                                 });
                             }
@@ -479,13 +493,11 @@ export default function SurahClient({ surahs, streak }: { surahs: SurahProgressR
                             </div>
 
                             {/* Ayah progress dots */}
-                            <div className="flex flex-wrap gap-1">
-                                {Array.from({ length: s.numberOfAyahs }).map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className={`h-1.5 flex-1 min-w-0.5 rounded-full transition-colors ${i < s.completedAyahs ? "bg-teal-500" : "bg-stone-200"}`}
-                                    />
-                                ))}
+                            <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden border border-stone-100">
+                                <div
+                                    className="h-full bg-teal-500 rounded-full transition-all duration-300"
+                                    style={{ width: `${(s.completedAyahs / s.numberOfAyahs) * 100}%` }}
+                                />
                             </div>
 
                             {/* Complete / Incomplete button */}
