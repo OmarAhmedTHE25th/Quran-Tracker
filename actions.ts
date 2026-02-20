@@ -258,7 +258,6 @@ export async function setTotalCompletedAyahs(total: number) {
         return { number: surah.number, completed, isDone: completed === surah.numberOfAyahs }
     })
 
-    // Fire all 114 updates in parallel — independent rows, no transaction needed
     await Promise.all(
         updates.map(u =>
             prisma.surahProgress.update({

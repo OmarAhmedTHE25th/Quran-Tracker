@@ -113,24 +113,6 @@ export default async function Home() {
         where: {userId}
     });
 
-    // Ayah of the Day (server-side)
-    async function getAyahOfTheDay() {
-        try {
-            const daySeed = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-            const ayahNumber = (daySeed % 6236) + 1;
-            const res = await fetch(`https://api.alquran.cloud/v1/ayah/${ayahNumber}/en.asad`, {cache: "no-cache"});
-            const json = await res.json();
-            return {
-                text: json?.data?.text as string | undefined,
-                surah: json?.data?.surah?.englishName as string | undefined,
-                ref: json?.data?.numberInSurah ? `${json?.data?.surah?.englishName} ${json?.data?.numberInSurah}` : undefined,
-            };
-        } catch {
-            return {text: undefined, surah: undefined, ref: undefined};
-        }
-    }
-
-    const ayah = await getAyahOfTheDay();
     const analytics = await getWeeklyAnalytics();
     const userBadges = await getBadges();
 
@@ -150,21 +132,7 @@ export default async function Home() {
                 numberOfAyahs: s.numberOfAyahs
             }))
         });
-        const seeded = await prisma.surahProgress.findMany({where: {userId}, orderBy: {number: "asc"}});
-        return (
-            <div className="space-y-6">
-                {ayah.text && (
-                    <div className="mx-4 my-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
-                        <div className="text-xs uppercase tracking-widest text-amber-600 font-bold mb-1">Ayah of the
-                            Day
-                        </div>
-                        <div className="text-sm leading-relaxed">{ayah.text}</div>
-                        {ayah.ref && <div className="text-xs text-amber-700 mt-1">— {ayah.ref}</div>}
-                    </div>
-                )}
-                <SurahClient surahs={seeded} streak={streak}/>
-            </div>
-        );
+
 
     }
     const today = new Date();
@@ -182,15 +150,6 @@ export default async function Home() {
 
     return (
         <div className="space-y-6">
-            {ayah.text && (
-                <div className="mx-4 my-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
-                    <div className="text-xs uppercase tracking-widest text-amber-600 font-bold mb-1">Ayah of the Day
-                    </div>
-                    <div className="text-sm leading-relaxed">{ayah.text}</div>
-                    {ayah.ref && <div className="text-xs text-amber-700 mt-1">— {ayah.ref}</div>}
-                </div>
-            )}
-
             {/* Badges & Analytics */}
             <div className="mx-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Badges */}
