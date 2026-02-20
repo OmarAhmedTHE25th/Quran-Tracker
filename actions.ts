@@ -125,17 +125,18 @@ export async function resetAll() {
         where: { userId },
         update: {
             streakCount: 0,
-            lastDate: null
+            lastDate: null,
+            currentPage: 1
         },
         create: {
             userId,
             streakCount: 0,
-            lastDate: null
+            lastDate: null,
+            currentPage: 1
         }
     });
     revalidatePath("/");
 }
-
 async function updateStreak(userId: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

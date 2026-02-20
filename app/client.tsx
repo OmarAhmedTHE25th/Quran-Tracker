@@ -19,6 +19,7 @@ type UserStreak = {
     streakCount: number;
     lastDate: Date | null;
     currentPage: number;
+    dailyGoal: number;
 };
 
 // Given a total completed ayah count, distribute it across surahs in order.

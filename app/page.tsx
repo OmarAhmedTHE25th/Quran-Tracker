@@ -116,8 +116,7 @@ export default async function Home() {
     const analytics = await getWeeklyAnalytics();
     const userBadges = await getBadges();
 
-    console.log("surahs count:", surahs.length)
-    console.log("userId:", userId)
+
     if (surahs.length === 0) {
         const res = await fetch("https://api.alquran.cloud/v1/surah");
         const json = await res.json();
