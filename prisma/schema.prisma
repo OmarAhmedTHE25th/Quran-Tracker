@@ -23,4 +23,24 @@ model UserStreak {
   lastDate    DateTime?
   currentPage Int       @default(1)
   dailyGoal   Int       @default(20)
+  targetDate  DateTime?
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeKey  String
+  awardedAt DateTime @default(now())
+  details   String?
+
+  @@unique([userId, badgeKey])
+}
+
+model UserReadingLog {
+  userId    String
+  date      DateTime
+  ayahsRead Int      @default(0)
+  pagesRead Int      @default(0)
+
+  @@id([userId, date])
 }

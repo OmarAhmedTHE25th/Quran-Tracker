@@ -29,6 +29,7 @@ export async function markSurahDone(surahNumber: number)
 {
     const userId = await getUserId()
     const row  = await findSurah(surahNumber)
+    const addedAyahs = row.numberOfAyahs - row.completedAyahs;
     await prisma.surahProgress.update(
         {
             where: {userId_number: {
@@ -40,6 +41,10 @@ export async function markSurahDone(surahNumber: number)
                 completedAyahs: row.numberOfAyahs
             }
         });
+    if (addedAyahs > 0) {
+        await logActivity(userId, addedAyahs, 0);
+        if (surahNumber === 18) await awardBadge(userId, "halfway_there");
+    }
     await updateStreak(userId);
     revalidatePath("/");
 }
@@ -78,6 +83,10 @@ export async function incrementAyahs(surahNumber: number)
             }
         }
     )
+    await logActivity(userId, 1, 0);
+    if (surahNumber === 18 && newCompletedAyahs === row.numberOfAyahs) {
+        await awardBadge(userId, "halfway_there");
+    }
     await updateStreak(userId);
     revalidatePath("/");
 }
@@ -159,13 +168,17 @@ async function updateStreak(userId: string) {
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (lastDate && lastDate.getTime() === yesterday.getTime()) {
+        const newStreak = streak.streakCount + 1;
         await prisma.userStreak.update({
             where: { userId },
             data: {
-                streakCount: streak.streakCount + 1,
+                streakCount: newStreak,
                 lastDate: today
             }
         });
+        if (newStreak >= 7) {
+            await awardBadge(userId, "consistency_king");
+        }
     } else {
         await prisma.userStreak.update({
             where: { userId },
@@ -180,6 +193,7 @@ export async function setAyahs(surahNumber: number, count: number) {
     const userId = await getUserId()
     const row = await findSurah(surahNumber)
     const clamped = Math.min(Math.max(0, count), row.numberOfAyahs)
+    const delta = clamped - row.completedAyahs;
     await prisma.surahProgress.update({
         where: { userId_number: { number: surahNumber, userId } },
         data: {
@@ -187,6 +201,12 @@ export async function setAyahs(surahNumber: number, count: number) {
             completed: clamped === row.numberOfAyahs
         }
     })
+    if (delta > 0) {
+        await logActivity(userId, delta, 0);
+        if (surahNumber === 18 && clamped === row.numberOfAyahs) {
+            await awardBadge(userId, "halfway_there");
+        }
+    }
     await updateStreak(userId)
     revalidatePath("/")
 }
@@ -194,6 +214,11 @@ export async function setAyahs(surahNumber: number, count: number) {
 export async function updateQuranPage(page: number) {
     const userId = await getUserId()
     const clamped = Math.min(Math.max(1, page), 604)
+
+    const streak = await prisma.userStreak.findUnique({ where: { userId } });
+    const oldPage = streak?.currentPage ?? 1;
+    const pageDelta = clamped - oldPage;
+
     await prisma.userStreak.upsert({
         where: { userId },
         update: {
@@ -206,6 +231,9 @@ export async function updateQuranPage(page: number) {
             lastDate: null
         }
     })
+    if (pageDelta > 0) {
+        await logActivity(userId, 0, pageDelta);
+    }
     revalidatePath("/")
 }
 
@@ -242,4 +270,73 @@ export async function setTotalCompletedAyahs(total: number) {
 
     await updateStreak(userId)
     revalidatePath("/")
+}
+async function logActivity(userId: string, ayahsDelta: number, pagesDelta: number) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const log = await prisma.userReadingLog.upsert({
+        where: { userId_date: { userId, date: today } },
+        update: {
+            ayahsRead: { increment: ayahsDelta },
+            pagesRead: { increment: pagesDelta }
+        },
+        create: {
+            userId,
+            date: today,
+            ayahsRead: ayahsDelta,
+            pagesRead: pagesDelta
+        }
+    });
+
+    if (log.ayahsRead >= 50) {
+        await awardBadge(userId, "the_sprinter");
+    }
+}
+
+async function awardBadge(userId: string, badgeKey: string) {
+    try {
+        await prisma.userBadge.create({
+            data: { userId, badgeKey }
+        });
+    } catch (e) {
+        // Ignore duplicate key errors
+    }
+}
+
+export async function getWeeklyAnalytics() {
+    const userId = await getUserId();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const logs = await prisma.userReadingLog.findMany({
+        where: {
+            userId,
+            date: { gte: sevenDaysAgo }
+        },
+        orderBy: { date: "asc" }
+    });
+
+    // Fill missing days
+    const result = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const log = logs.find(l => l.date.toISOString().split('T')[0] === d.toISOString().split('T')[0]);
+        result.push({
+            date: d.toLocaleDateString("en-US", { weekday: "short" }),
+            ayahs: log?.ayahsRead ?? 0
+        });
+    }
+    return result;
+}
+
+export async function getBadges() {
+    const userId = await getUserId();
+    return prisma.userBadge.findMany({
+        where: { userId },
+        orderBy: { awardedAt: "desc" }
+    });
 }

@@ -1,6 +1,6 @@
 "use client"
-import { useState, useEffect, useTransition } from "react";
-import { setDailyGoal } from "@/actions.ramadan";
+import {useState, useEffect, useTransition, useMemo} from "react";
+import { setDailyGoal, setKhatamTarget } from "@/actions.ramadan";
 import Link from "next/link";
 
 // Ramadan 2025 starts March 1 (adjust if needed)
@@ -62,9 +62,11 @@ function getTodayTargetPage(dailyGoal: number): number {
 export default function RamadanClient({
                                           currentPage,
                                           dailyGoal,
+                                          targetDate,
                                       }: {
     currentPage: number;
     dailyGoal: number;
+    targetDate: Date | null;
 }) {
     const [cities, setCities] = useState(PRESET_CITIES);
     const [selectedCity, setSelectedCity] = useState(PRESET_CITIES[0]);
@@ -81,6 +83,23 @@ export default function RamadanClient({
 
     const ramadanDay = getRamadanDay();
     const todayTarget = getTodayTargetPage(dailyGoal);
+
+    // Khatam Planner derived target (if user set a target date)
+    const [plannerDate, setPlannerDate] = useState<string>(
+        targetDate ? new Date(targetDate).toISOString().slice(0, 10) : ""
+    );
+    const daysRemaining = useMemo(() => {
+        if (!plannerDate) return null;
+        const today = new Date(); today.setHours(0,0,0,0);
+        const tgt = new Date(plannerDate); tgt.setHours(0,0,0,0);
+        const diffMs = tgt.getTime() - today.getTime();
+        const d = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        return d > 0 ? d : null;
+    }, [plannerDate]);
+    const pagesLeft = Math.max(0, TOTAL_QURAN_PAGES - currentPage);
+    const suggestedDaily = daysRemaining ? Math.max(1, Math.ceil(pagesLeft / daysRemaining)) : null;
+
+    // Progress bar remains cumulative Ramadan target; planner shows a separate daily suggestion
     const goalReached = currentPage >= todayTarget;
     const progressPercent = Math.min(Math.round((currentPage / todayTarget) * 100), 100);
 
@@ -153,7 +172,7 @@ export default function RamadanClient({
 
         <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
-        {/* Daily Goal Progress */}
+        {/* Daily Goal Progress (uses Khatam Planner if set) */}
         <div className={`rounded-2xl p-6 border ${goalReached ? "bg-emerald-950/60 border-emerald-500/40" : "bg-[#141f35] border-amber-800/30"}`}>
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
     <div>
@@ -191,7 +210,32 @@ export default function RamadanClient({
     )}
     </div>
 
-    {/* Khatma Goal Selector */}
+    {/* Khatam Planner */}
+        <div className="bg-[#141f35] rounded-2xl border border-amber-800/30 overflow-hidden">
+          <div className="p-6 border-b border-amber-900/20">
+            <h2 className="text-lg font-bold text-amber-100 mb-1">Khatam Planner</h2>
+            <p className="text-amber-400/60 text-sm font-sans">"I want to finish the Quran by" — pick a date and we’ll compute a daily target.</p>
+          </div>
+          <div className="p-6 flex flex-col md:flex-row gap-3 md:items-center justify-between">
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-amber-300 font-sans">Finish by</label>
+              <input type="date" value={plannerDate} onChange={(e)=>setPlannerDate(e.target.value)} className="bg-[#0b1120] border border-amber-800/40 rounded-lg px-3 py-2 text-amber-100 text-sm font-sans" />
+            </div>
+            <div className="text-amber-400/70 text-sm font-sans">
+              {suggestedDaily ? (
+                <span>Read <span className="text-amber-300 font-bold">{suggestedDaily}</span> pages today to stay on track!</span>
+              ) : (
+                <span>Set a target date to get a personalized daily goal.</span>
+              )}
+            </div>
+            <button
+              onClick={() => startTransition(async ()=>{ await setKhatamTarget(plannerDate || null); setGoalSaved(true); setTimeout(()=>setGoalSaved(false), 2000); })}
+              className={`px-5 py-2 rounded-xl text-sm font-bold font-sans transition-all ${goalSaved ? "bg-emerald-600 text-white" : "bg-amber-500 hover:bg-amber-400 text-teal-950"}`}
+            >{goalSaved ? "✓ Saved" : "Save Target"}</button>
+          </div>
+        </div>
+
+        {/* Khatma Goal Selector */}
     <div className="bg-[#141f35] rounded-2xl border border-amber-800/30 overflow-hidden">
     <div className="p-6 border-b border-amber-900/20">
     <h2 className="text-lg font-bold text-amber-100 mb-1">Set Your Khatma Goal</h2>

@@ -11,6 +11,7 @@ export default async function RamadanPage() {
     const streak = await prisma.userStreak.findUnique({ where: { userId } });
     const currentPage = streak?.currentPage ?? 1;
     const dailyGoal = streak?.dailyGoal ?? 20;
+    const targetDate = streak?.targetDate ?? null;
 
-    return <RamadanClient currentPage={currentPage} dailyGoal={dailyGoal} />;
+    return <RamadanClient currentPage={currentPage} dailyGoal={dailyGoal} targetDate={targetDate ? new Date(targetDate) : null} />;
 }

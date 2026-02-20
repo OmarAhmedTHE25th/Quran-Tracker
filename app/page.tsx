@@ -2,17 +2,20 @@ import {initializePrisma} from "@/prisma/prisma";
 import SurahClient from "./client"
 import {auth} from "@clerk/nextjs/server";
 import {SignInButton, SignUpButton} from "@clerk/nextjs";
+import {getWeeklyAnalytics, getBadges} from "@/actions";
+import { Key } from "react";
 
 function LandingPage() {
     return (
-        <div className="min-h-[calc(100vh-64px)] bg-[#040d21] relative overflow-hidden flex flex-col items-center justify-center px-4">
+        <div
+            className="min-h-[calc(100vh-64px)] bg-[#040d21] relative overflow-hidden flex flex-col items-center justify-center px-4">
             {/* Stars background */}
             <div className="absolute inset-0 z-0">
                 <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <radialGradient id="starGradient" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stopColor="white" stopOpacity="0.8" />
-                            <stop offset="100%" stopColor="white" stopOpacity="0" />
+                            <stop offset="0%" stopColor="white" stopOpacity="0.8"/>
+                            <stop offset="100%" stopColor="white" stopOpacity="0"/>
                         </radialGradient>
                     </defs>
                     {[...Array(50)].map((_, i) => (
@@ -23,7 +26,10 @@ function LandingPage() {
                             r={Math.random() * 1.5}
                             fill="url(#starGradient)"
                             className="animate-pulse"
-                            style={{ animationDelay: `${Math.random() * 5}s`, animationDuration: `${2 + Math.random() * 3}s` }}
+                            style={{
+                                animationDelay: `${Math.random() * 5}s`,
+                                animationDuration: `${2 + Math.random() * 3}s`
+                            }}
                         />
                     ))}
                 </svg>
@@ -43,41 +49,44 @@ function LandingPage() {
             {/* Lanterns */}
             <div className="absolute left-10 bottom-0 hidden md:block opacity-60">
                 <svg width="60" height="150" viewBox="0 0 60 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="30" y1="0" x2="30" y2="40" stroke="#4a5568" strokeWidth="2" />
-                    <path d="M15 40H45L55 60V90L30 110L5 90V60L15 40Z" fill="#1a202c" stroke="#fbbf24" strokeWidth="2" />
-                    <rect x="22" y="65" width="16" height="25" fill="#fbbf24" className="animate-pulse" />
+                    <line x1="30" y1="0" x2="30" y2="40" stroke="#4a5568" strokeWidth="2"/>
+                    <path d="M15 40H45L55 60V90L30 110L5 90V60L15 40Z" fill="#1a202c" stroke="#fbbf24" strokeWidth="2"/>
+                    <rect x="22" y="65" width="16" height="25" fill="#fbbf24" className="animate-pulse"/>
                 </svg>
             </div>
-            
+
             <div className="absolute right-20 bottom-0 hidden lg:block opacity-40">
                 <svg width="50" height="120" viewBox="0 0 50 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="25" y1="0" x2="25" y2="30" stroke="#4a5568" strokeWidth="2" />
-                    <path d="M12 30H38L46 45V70L25 85L4 70V45L12 30Z" fill="#1a202c" stroke="#fbbf24" strokeWidth="2" />
-                    <rect x="18" y="50" width="14" height="20" fill="#fbbf24" className="animate-pulse" />
+                    <line x1="25" y1="0" x2="25" y2="30" stroke="#4a5568" strokeWidth="2"/>
+                    <path d="M12 30H38L46 45V70L25 85L4 70V45L12 30Z" fill="#1a202c" stroke="#fbbf24" strokeWidth="2"/>
+                    <rect x="18" y="50" width="14" height="20" fill="#fbbf24" className="animate-pulse"/>
                 </svg>
             </div>
 
             {/* Main Content */}
             <div className="z-20 text-center max-w-2xl">
-                <div className="inline-block mb-4 px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-bold uppercase tracking-widest">
+                <div
+                    className="inline-block mb-4 px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-bold uppercase tracking-widest">
                     Ramadan Kareem
                 </div>
                 <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight">
                     Quran <span className="text-amber-400">Tracker</span>
                 </h1>
                 <p className="text-xl text-blue-200/80 mb-10 leading-relaxed font-light">
-                    Embark on a meaningful spiritual journey this Ramadan. 
+                    Embark on a meaningful spiritual journey this Ramadan.
                     Track your progress, stay focused, and complete the Holy Quran at your own pace.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <SignUpButton mode="modal">
-                        <button className="w-full sm:w-auto px-8 py-4 bg-amber-500 hover:bg-amber-400 text-teal-950 font-bold rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all transform hover:scale-105 active:scale-95 text-lg">
+                        <button
+                            className="w-full sm:w-auto px-8 py-4 bg-amber-500 hover:bg-amber-400 text-teal-950 font-bold rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all transform hover:scale-105 active:scale-95 text-lg">
                             Get Started
                         </button>
                     </SignUpButton>
                     <SignInButton mode="modal">
-                        <button className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white/20 hover:border-white/40 text-white font-semibold rounded-2xl transition-all text-lg">
+                        <button
+                            className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white/20 hover:border-white/40 text-white font-semibold rounded-2xl transition-all text-lg">
                             Sign In
                         </button>
                     </SignInButton>
@@ -85,7 +94,8 @@ function LandingPage() {
             </div>
 
             {/* Bottom Glow */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-amber-500/5 blur-[120px] pointer-events-none"></div>
+            <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-amber-500/5 blur-[120px] pointer-events-none"></div>
         </div>
     );
 }
@@ -103,6 +113,27 @@ export default async function Home() {
         where: {userId}
     });
 
+    // Ayah of the Day (server-side)
+    async function getAyahOfTheDay() {
+        try {
+            const daySeed = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+            const ayahNumber = (daySeed % 6236) + 1;
+            const res = await fetch(`https://api.alquran.cloud/v1/ayah/${ayahNumber}/en.asad`, {cache: "no-cache"});
+            const json = await res.json();
+            return {
+                text: json?.data?.text as string | undefined,
+                surah: json?.data?.surah?.englishName as string | undefined,
+                ref: json?.data?.numberInSurah ? `${json?.data?.surah?.englishName} ${json?.data?.numberInSurah}` : undefined,
+            };
+        } catch {
+            return {text: undefined, surah: undefined, ref: undefined};
+        }
+    }
+
+    const ayah = await getAyahOfTheDay();
+    const analytics = await getWeeklyAnalytics();
+    const userBadges = await getBadges();
+
     console.log("surahs count:", surahs.length)
     console.log("userId:", userId)
     if (surahs.length === 0) {
@@ -119,10 +150,21 @@ export default async function Home() {
                 numberOfAyahs: s.numberOfAyahs
             }))
         });
-        return <SurahClient surahs={
-            await prisma.surahProgress.findMany(
-                {where: {userId}, orderBy: {number: "asc"}})
-        } streak={streak}/>;
+        const seeded = await prisma.surahProgress.findMany({where: {userId}, orderBy: {number: "asc"}});
+        return (
+            <div className="space-y-6">
+                {ayah.text && (
+                    <div className="mx-4 my-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
+                        <div className="text-xs uppercase tracking-widest text-amber-600 font-bold mb-1">Ayah of the
+                            Day
+                        </div>
+                        <div className="text-sm leading-relaxed">{ayah.text}</div>
+                        {ayah.ref && <div className="text-xs text-amber-700 mt-1">— {ayah.ref}</div>}
+                    </div>
+                )}
+                <SurahClient surahs={seeded} streak={streak}/>
+            </div>
+        );
 
     }
     const today = new Date();
@@ -135,8 +177,66 @@ export default async function Home() {
     const streakIsStale = lastDate && lastDate.getTime() < yesterday.getTime();
 
     const effectiveStreak = streak && streakIsStale
-        ? { ...streak, streakCount: 0 }
+        ? {...streak, streakCount: 0}
         : streak;
 
-    return <SurahClient surahs={surahs} streak={effectiveStreak} />
+    return (
+        <div className="space-y-6">
+            {ayah.text && (
+                <div className="mx-4 my-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
+                    <div className="text-xs uppercase tracking-widest text-amber-600 font-bold mb-1">Ayah of the Day
+                    </div>
+                    <div className="text-sm leading-relaxed">{ayah.text}</div>
+                    {ayah.ref && <div className="text-xs text-amber-700 mt-1">— {ayah.ref}</div>}
+                </div>
+            )}
+
+            {/* Badges & Analytics */}
+            <div className="mx-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Badges */}
+                <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+                    <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest mb-4">Your Badges</h3>
+                    <div className="flex flex-wrap gap-4">
+                        {userBadges.length === 0 ? (
+                            <p className="text-sm text-stone-400">Read more to earn badges!</p>
+                        ) : (
+                            userBadges.map((b: { id: Key | null | undefined; badgeKey: string; }) => (
+                                <div key={b.id} className="flex flex-col items-center gap-1 group">
+                                    <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-2xl border border-amber-200 shadow-sm group-hover:scale-110 transition-transform">
+                                        {b.badgeKey === "consistency_king" ? "👑" : b.badgeKey === "the_sprinter" ? "⚡" : b.badgeKey === "halfway_there" ? "🏆" : "🏅"}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-amber-700 capitalize">
+                                        {b.badgeKey.replace(/_/g, " ")}
+                                    </span>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Analytics Chart */}
+                <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+                    <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest mb-4">Weekly Progress (Ayahs)</h3>
+                    <div className="h-24 flex items-end gap-2">
+                        {analytics.map((d, i) => {
+                            const maxAyahs = Math.max(...analytics.map(a => a.ayahs), 10);
+                            const height = (d.ayahs / maxAyahs) * 100;
+                            return (
+                                <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                    <div 
+                                        className="w-full bg-teal-500 rounded-t-md min-h-[2px] transition-all duration-500" 
+                                        style={{ height: `${height}%` }}
+                                        title={`${d.ayahs} ayahs`}
+                                    />
+                                    <span className="text-[10px] text-stone-400 font-bold uppercase">{d.date[0]}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            <SurahClient surahs={surahs} streak={effectiveStreak} />
+        </div>
+    )
 }

@@ -27,3 +27,25 @@ export async function setDailyGoal(pagesPerDay: number) {
     })
     revalidatePath("/ramadan")
 }
+
+export async function setKhatamTarget(targetDateISO: string | null) {
+    const userId = await getUserId()
+    let targetDate: Date | null = null
+    if (targetDateISO) {
+        const d = new Date(targetDateISO)
+        if (!isNaN(d.getTime())) targetDate = d
+    }
+    await prisma.userStreak.upsert({
+        where: { userId },
+        update: { targetDate: targetDate ?? null },
+        create: {
+            userId,
+            targetDate: targetDate ?? null,
+            streakCount: 0,
+            lastDate: null,
+            currentPage: 1,
+            dailyGoal: 20
+        }
+    })
+    revalidatePath("/ramadan")
+}

@@ -413,14 +413,25 @@ export default function SurahClient({ surahs, streak }: { surahs: SurahProgressR
                                 </div>
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={() => setOpenInfo(s.number)}
-                                className="text-sm font-semibold text-teal-700 hover:text-teal-900"
-                                aria-label={`More info about ${s.englishName}`}
-                            >
-                                Info
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setOpenInfo(s.number)}
+                                    className="text-sm font-semibold text-teal-700 hover:text-teal-900"
+                                    aria-label={`More info about ${s.englishName}`}
+                                >
+                                    Info
+                                </button>
+                                <a
+                                    href={`https://quran.com/${s.number}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-sm font-semibold text-amber-600 hover:text-amber-700"
+                                    aria-label={`Read ${s.englishName} now on Quran.com`}
+                                >
+                                    Read Now ↗
+                                </a>
+                            </div>
 
                             {/* Ayah counter */}
                             <div className="flex items-center justify-between text-sm bg-stone-50 p-2 rounded-lg border border-stone-100">

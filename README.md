@@ -11,6 +11,12 @@ Quran Tracker is an inclusive, descriptive, and user-friendly web application th
 ## ✨ Features
 
 - Personalized reading goals based on Khatma plans
+- **Khatam Planner**: Set a target date to complete the Quran and get a custom daily page goal.
+- **Daily Reading Logs**: Automatically track ayahs and pages read each day.
+- **Gamified Badges**: Earn trophies like "The Sprinter" (50+ ayahs in a day) or "Consistency King" (7-day streak).
+- **Deep Linking**: Read any Surah immediately on Quran.com with the "Read Now" button.
+- **Analytics Dashboard**: Visualize your weekly progress with a 7-day bar chart.
+- **Ayah of the Day**: Get a random inspirational ayah directly on your dashboard.
 - Daily progress logging with clear visual feedback
 - Ramadan-focused view to support month-long goals
 - Integrated prayer times to plan reading around prayers
