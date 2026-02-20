@@ -171,7 +171,7 @@ export default function RamadanClient({
     {/* Progress bar */}
     <div className="w-full bg-amber-950/40 rounded-full h-3 mb-3 overflow-hidden border border-amber-900/30">
     <div
-        className={`h-full rounded-full transition-all duration-700 ${goalReached ? "bg-gradient-to-r from-emerald-500 to-teal-400" : "bg-gradient-to-r from-amber-600 to-amber-400"}`}
+        className={`h-full rounded-full transition-all duration-700 ${goalReached ? "bg-linear-to-r from-emerald-500 to-teal-400" : "bg-linear-to-r from-amber-600 to-amber-400"}`}
     style={{ width: `${progressPercent}%` }}
     />
     </div>
@@ -328,7 +328,7 @@ export default function RamadanClient({
     </div>
     <div className="w-full bg-amber-950/40 rounded-full h-2 overflow-hidden border border-amber-900/30">
     <div
-        className="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-300 transition-all duration-700"
+        className="h-full rounded-full bg-linear-to-r from-amber-600 to-amber-300 transition-all duration-700"
     style={{ width: `${(ramadanDay / 30) * 100}%` }}
     />
     </div>
